@@ -29,12 +29,12 @@ python _tokenizers/bindings/python/setup.py install && cd ../../..
 
 python3 train_tokenizer.py \
 --model "bpe" \
---hf_ds_path "VMware/open-instruct" \
---key "response"\
---model_prefix "test" \
+--hf_ds_path "hac541309/open-lid-dataset" \
+--key "response" \
+--model_prefix "openLID" \
 --whitespace_reservation 4 \
 --exp_whitespace_reservation \
---sample_percent 1
+--sample_percent 100
 
 
 deactivate
