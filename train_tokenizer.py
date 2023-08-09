@@ -1,30 +1,21 @@
 import argparse
-from time import time
+import json
 import logging
-from transformers import PreTrainedTokenizerFast
-from tokenizers import (
-    normalizers,
-    decoders,
-    Tokenizer,
-    Regex,
-)
-from tokenizers.pre_tokenizers import (
-    Punctuation,
-    Digits,
-    ByteLevel,
-    UnicodeScripts,
-    Sequence,
-    Split,
-    Whitespace,
-)
-from tokenizers.models import BPE, Unigram
-from tokenizers.trainers import BpeTrainer, UnigramTrainer
-from utils import load_dataset, batch_iterator, load_from_path, filter_dataset
-import os, json
+import os
+from time import time
+
 import datasets
+from tokenizers import Regex, Tokenizer, decoders, normalizers
+from tokenizers.models import BPE, Unigram
+from tokenizers.pre_tokenizers import (ByteLevel, Digits, Punctuation,
+                                       Sequence, Split, UnicodeScripts,
+                                       Whitespace)
+from tokenizers.trainers import BpeTrainer, UnigramTrainer
+
+from utils import batch_iterator, filter_dataset, load_from_path
 
 logger = logging.getLogger()
-NUM_PROC = max(1, os.cpu_count() - 4)
+NUM_PROC = os.cpu_count()
 CACHE_DIR = "~/corpus/__temp__/tokenizer_corpus"
 
 

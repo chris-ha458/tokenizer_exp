@@ -1,7 +1,6 @@
 import argparse
 from time import time
 import logging
-from transformers import PreTrainedTokenizerFast
 from tokenizers import (
     normalizers,
     decoders,

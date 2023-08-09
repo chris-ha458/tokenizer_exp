@@ -23,8 +23,6 @@ source ~/dev_envs/env_tokenizers/bin/activate
 
 # change this path
 xargs python3 /home/karyo/corpus/scripts/train_tokenizer.py < /home/karyo/corpus/scripts/configs/polyglot_64k.txt
-xargs python3 /home/karyo/corpus/scripts/train_tokenizer.py < /home/karyo/corpus/scripts/configs/polyglot_64k_unigram.txt
-xargs python3 /home/karyo/corpus/scripts/train_tokenizer.py < /home/karyo/corpus/scripts/configs/polyglot_50k_unigram.txt
 deactivate
 
-#rm -rf .cache __cache__ 
+#rm -rf .cache __cache__ __*
