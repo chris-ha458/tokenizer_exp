@@ -1,4 +1,3 @@
-import argparse
 import json
 import logging
 import os
@@ -18,185 +17,25 @@ from tokenizers.pre_tokenizers import (
 )
 from tokenizers.trainers import BpeTrainer, UnigramTrainer
 
-from utils import batch_iterator, filter_dataset, load_from_path
+from utils import (
+    batch_iterator, 
+    filter_dataset, 
+    load_from_path, 
+    parse_args,
+)
 
 logger = logging.getLogger()
 NUM_PROC = os.cpu_count()
-CACHE_DIR = "~/corpus/__temp__/tokenizer_corpus"
+CACHE_DIR = "./__temp__/tokenizer_corpus"
 
-
-def parse_args():
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "--model",
-        type=str,
-        default="bpe",
-        choices=["bpe", "unigram"],
-        help="tokenizer model",
-    )
-    parser.add_argument("--dropout", default=None, help="dropout rate for BPE")
-    parser.add_argument(
-        "--vocab_size", type=int, default=50257, help="vocab size for tokenizer"
-    )
-    parser.add_argument(
-        "--data_path",
-        type=str,
-        required=False,
-        # default="~/corpus/jsonl/the_stack_smol.jsonl",
-        help="takes str to single file or path",
-    )
-    parser.add_argument(
-        "--hf_ds_path",
-        type=str,
-        default="hac541309/open-lid-dataset",
-        required=False,
-        help="takes huggingface data repo",
-    )
-    parser.add_argument("--save_path", type=str, default="tokenizer")
-    parser.add_argument(
-        "--model_prefix",
-        type=str,
-        default="tokenizer",
-        help="""(output model prefix)  default:"tokenizer" """,
-    )
-    parser.add_argument(
-        "--normalizer",
-        type=str,
-        default="NFC",
-        choices=["NFKC", "NFC"],
-        help="unicode normalizer NFKC is closer to spm. NFC is closer to most text",
-    )
-    parser.add_argument(
-        "--buffer_tokens",
-        type=int,
-        default=64,
-        help="number of tokens to pad BEFORE tokenizer initialization",
-    )
-    parser.add_argument(
-        "--byte_fallback",
-        type=bool,
-        action=argparse.BooleanOptionalAction,
-        default=False,
-        help="Huggingface style Bytelevel() vs spm style (byte_fallback)",
-    )
-    parser.add_argument(
-        "--cache_capacity",
-        type=int,
-        default=10000,  # this is default for tokenizers. TODO: ablations
-        help="cache_capacity in BPE.",
-    )
-    parser.add_argument(
-        "--component_mode",
-        type=bool,
-        action=argparse.BooleanOptionalAction,
-        default=False,
-        help="unigram component mode",
-    )
-    parser.add_argument(
-        "--whitespace_reservation",
-        type=int,
-        default=0,
-        help="number of whitespaces to add as special tokens. \n \
-            default length linear. \n \
-            sorted down from len = (whitespace_reservation)",
-        # consider no repeat ngrams during generation. (3 indentations--> bad)
-    )
-    parser.add_argument(
-        "--exp_whitespace_reservation",
-        type=int,
-        default=0,
-        choices=[0, 1, 2, 3, 4],
-        help="number of whitespaces to add as special tokens. \n \
-            default length linear. \n \
-            sorted down from len = (whitespace_reservation)",
-        # consider no repeat ngrams during generation. (3 indentations--> bad)
-    )
-    parser.add_argument(
-        "--preserve_whitespace",
-        type=str,
-        default="yes",
-        choices=["yes", "inference", "no"],
-        help="choose whitespace preservation. \n \
-            yes preserves during training and inference\n \
-            inference removes during training but resumes at inference\n \
-            no removes completely. this makes tokenizer non invertible(loses original)",
-    )
-    parser.add_argument(
-        "--remove_longspace",
-        type=bool,
-        default=False,
-        action=argparse.BooleanOptionalAction,
-        help="""during training preprocessing, remove whitespaces longer than 16""",
-    )
-    parser.add_argument(
-        "--single_whitespace",
-        type=bool,
-        default=False,
-        action=argparse.BooleanOptionalAction,
-        help="Whether to include single whitespace in vocab",
-    )
-    parser.add_argument(
-        "--add_prefix_space",
-        type=bool,
-        default=False,
-        action=argparse.BooleanOptionalAction,
-        help="add prefix space. True : 'Gword','word' ",
-    )
-    parser.add_argument(
-        "--isolate_camelcase",
-        type=bool,
-        default=True,
-        action=argparse.BooleanOptionalAction,
-        help="during tokenizer training preprocessing, isolate camelCases",
-    )
-    parser.add_argument(
-        "--shuffle_seed",
-        type=int,
-        default=0,
-        help="corpus shuffle seed. 0(default) for no shuffling",
-    )
-    parser.add_argument(
-        "--sample_percent",
-        type=int,
-        default=100,
-        help="how much to sample",
-    )
-    parser.add_argument(
-        "--max_sentence_length",
-        type=int,
-        default=2048,
-        help="maximum length of sentence in characters",
-    )
-    parser.add_argument(
-        "--max_token_length",
-        type=int,
-        default=-1,
-        help="Prevents creating tokens longer than the specified size",
-    )
-    parser.add_argument(
-        "--bpe_min_frequency",
-        type=int,
-        default=-1,
-        help="(BPE)The minimum frequency a pair should have in order to be merged.",
-    )
-
-    args, _ = parser.parse_known_args()
-    return args
 
 
 def main(args):
-    data_path = args.data_path
-    hf_ds_path = args.hf_ds_path
-    seed = args.shuffle_seed
-    sample_percent = args.sample_percent
-    max_sentence_length = args.max_sentence_length
-    max_token_length = args.max_token_length
-    component_mode = args.component_mode
 
-    if data_path:
-        dataset = load_from_path(data_path)
-    elif hf_ds_path:
-        dataset = datasets.load_dataset(
+    if args.data_path:
+        training_dataset = load_from_path(args.data_path)
+    elif args.hf_ds_path:
+        training_dataset = datasets.load_dataset(
             path=args.hf_ds_path,
             cache_dir=CACHE_DIR,
             num_proc=NUM_PROC,
@@ -205,21 +44,21 @@ def main(args):
     else:
         raise ValueError("Check --data_path or hf_ds_path")
 
-    num_examples = len(dataset)
-    if sample_percent != 100:
-        num_to_keep = int(num_examples * (sample_percent / 100))
-        dataset = dataset.select(range(num_to_keep))
-        if seed == 0:
-            dataset.shuffle(seed=42)
-    if seed != 0:
-        dataset.shuffle(seed)
-    if max_sentence_length > 0:
-        dataset = dataset.filter(
-            lambda example: len(example["text"]) <= max_sentence_length,
+    num_examples = len(training_dataset)
+    if args.sample_percent != 100:
+        num_to_keep = int(num_examples * (args.sample_percent / 100))
+        training_dataset = training_dataset.select(range(num_to_keep))
+        if args.shuffle_seed == 0:
+            training_dataset.shuffle(seed=42)
+    if args.shuffle_seed != 0:
+        training_dataset.shuffle(args.shuffle_seed)
+    if args.max_sentence_length > 0:
+        training_dataset = training_dataset.filter(
+            lambda example: len(example["text"]) <= args.max_sentence_length,
             num_proc=NUM_PROC,
         )
-    dataset = filter_dataset(dataset)
-    print(len(dataset))
+    training_dataset = filter_dataset(training_dataset)
+    print(num_examples)
 
     # tokenizer arguments
     SPECIAL_TOKENS = sorted(
@@ -272,7 +111,7 @@ def main(args):
     whitespace = " "
     whitespace_count = args.whitespace_reservation  # 4,2 whitespaces
 
-    if args.exp_whitespace_reservation == 0:
+    if args.exp_whitespace_reservation:
         whitespace_list = (
             [whitespace * count for count in range(whitespace_count, 1, -1)]
             if whitespace_count > 0
@@ -281,7 +120,7 @@ def main(args):
     else:
         whitespace_list = [
             whitespace * (2**count)
-            for count in range(args.exp_whitespace_reservation, 0, -1)
+            for count in range(whitespace_count, 0, -1)
         ]
 
     if args.single_whitespace:
@@ -298,10 +137,10 @@ def main(args):
             + buffer_tokens
             # + whitespace_list #not a special token
         )
-        if not component_mode
+        if not args.component_mode
         else []
     )
-    add_prefix_space = args.add_prefix_space
+    _ = args.add_prefix_space
 
     # tokenizer normalizer
     if args.normalizer.lower() == "nfc":
@@ -356,7 +195,7 @@ def main(args):
     else:
         pre_tokenizer_list.append(ByteLevel(add_prefix_space=False, use_regex=True))
         decoder = decoders.ByteLevel(add_prefix_space=False, use_regex=True)
-        if not component_mode:
+        if not args.component_mode:
             trainer_parameters["initial_alphabet"] = sorted(ByteLevel.alphabet())
 
     # if yes, default to no whitespace handling
@@ -370,8 +209,8 @@ def main(args):
     # construct_pretokenizer
     pre_tokenizer = Sequence(pre_tokenizer_list)
 
-    if args.model.lower() == "bpe":
-        assert not component_mode
+    if args.model == "bpe":
+        assert not args.component_mode
         tokenizer = Tokenizer(
             BPE(
                 cache_capacity=args.cache_capacity,
@@ -381,31 +220,32 @@ def main(args):
             )
         )
 
-        if max_token_length > 0:
-            trainer_parameters["max_token_length"] = max_token_length
+        if args.max_token_length > 0:
+            trainer_parameters["max_token_length"] = args.max_token_length
         if args.bpe_min_frequency > 0:
             trainer_parameters["min_frequency"] = args.bpe_min_frequency
         trainer = BpeTrainer(**trainer_parameters)
     elif args.model.lower() == "unigram":
         tokenizer = Tokenizer(Unigram())
-        if not component_mode:
+        if not args.component_mode:
             trainer_parameters["unk_token"] = "<|unk|>"
 
-        if max_token_length > 0:
-            trainer_parameters["max_piece_length"] = max_token_length
+        if args.max_token_length > 0:
+            trainer_parameters["max_piece_length"] = args.max_token_length
         trainer = UnigramTrainer(**trainer_parameters)
     tokenizer.normalizer = normalizer
     tokenizer.pre_tokenizer = pre_tokenizer
     tokenizer.decoder = decoder
 
     start = time()
-    if isinstance(dataset, datasets.arrow_dataset.Dataset):
+    if isinstance(training_dataset, datasets.arrow_dataset.Dataset):
         tokenizer.train_from_iterator(
-            batch_iterator(dataset), trainer=trainer, length=len(dataset)
+            batch_iterator(training_dataset), trainer=trainer, length=num_examples
         )
 
     end = time()
     print(f"time elapsed: {(end - start) / 60:.2f}m")
+
     # if preserve whitespace is set to "inference", remove Whitespace splitter
     if args.preserve_whitespace == "inference":
         for item in pre_tokenizer_list:
@@ -496,9 +336,10 @@ def main(args):
     print(
         f"original input length: char= {len(text)}, bytes= {len(text.encode('utf-8'))}"
     )
-    print(f"token count: {len(tokens)}")
+    LEN_TOKENS = len(tokens)
+    print(f"token count: {LEN_TOKENS}")
     print(
-        f"unicode fallback portion: {ufb_count} /{len(tokens)} = {ufb_count / len(tokens):.3f}"
+        f"unicode fallback portion: {ufb_count} /{LEN_TOKENS} = {ufb_count / LEN_TOKENS:.3f}"
     )
     if args.model.lower() == "unigram":
         sum = 0
