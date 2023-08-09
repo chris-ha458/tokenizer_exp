@@ -30,7 +30,7 @@ python3 setup.py install && cd ../../..
 python3 train_tokenizer.py \
 --model "bpe" \
 --hf_ds_path "hac541309/open-lid-dataset" \
---key "response" \
+--key "text" \
 --model_prefix "openLID" \
 --whitespace_reservation 4 \
 --exp_whitespace_reservation \
