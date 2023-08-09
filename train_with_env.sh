@@ -26,11 +26,13 @@ source ~/dev_envs/env_tokenizers/bin/activate
 
 python3 train_tokenizer.py \
 --model "bpe" \
---hf_ds_path "hac541309/the_stack_smol_all" \
---model_prefix "test" \
+--data_path "/home/karyo/corpus/data/openlid/parquet/openlid.parquet" \
+--key "text" \
+--model_prefix "openLID" \
 --whitespace_reservation 4 \
+--max_sentence_length 0 \
 --exp_whitespace_reservation \
---sample_percent 1
+--sample_percent 100
 
 
 deactivate

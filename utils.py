@@ -6,8 +6,8 @@ import datasets
 import jsonlines
 from tqdm import tqdm
 
-batch_size = 1024
-NUM_PROC = max(1, os.cpu_count() - 4)
+batch_size = 4096
+NUM_PROC = os.cpu_count()
 
 
 def batch_iterator(
@@ -33,7 +33,7 @@ def text_iterator(text_path: str, key: str = "text", batch_size: int = batch_siz
 
 
 
-def load_from_filepath(path: str, key="text"):
+def load_from_filepath(path: str, cache_dir: str, key="text"):
     dataset = None
     if os.path.isfile(path):
         if ".jsonl" in path:
@@ -41,14 +41,14 @@ def load_from_filepath(path: str, key="text"):
         if ".txt" in path:
             dataset = load_text(path)
         if ".parquet" in path:
-            dataset = datasets.Dataset.from_parquet(path, num_proc=NUM_PROC)
+            dataset = datasets.Dataset.from_parquet(path, num_proc=NUM_PROC,cache_dir=cache_dir)
     return dataset
 
 
-def load_from_path(path: str, key="text"):
+def load_from_path(path: str, cache_dir: str,key="text"):
     path = os.path.normpath(path).replace("~", os.path.expanduser("~"))
     if os.path.isfile(path):
-        dataset = load_from_filepath(path)
+        dataset = load_from_filepath(path,cache_dir=cache_dir)
 
     if os.path.isdir(path):
         try:

@@ -18,9 +18,9 @@ from tokenizers.pre_tokenizers import (
 from tokenizers.trainers import BpeTrainer, UnigramTrainer
 
 from utils import (
-    batch_iterator, 
-    filter_dataset, 
-    load_from_path, 
+    batch_iterator,
+    filter_dataset,
+    load_from_path,
     parse_args,
 )
 
@@ -29,12 +29,9 @@ NUM_PROC = os.cpu_count()
 CACHE_DIR = "./__temp__/tokenizer_corpus"
 
 
-
 def main(args):
-    print(args.key)
-
     if args.data_path:
-        training_dataset = load_from_path(args.data_path)
+        training_dataset = load_from_path(args.data_path,cache_dir=CACHE_DIR)
     elif args.hf_ds_path:
         training_dataset = datasets.load_dataset(
             path=args.hf_ds_path,
@@ -44,7 +41,6 @@ def main(args):
         )
     else:
         raise ValueError("Check --data_path or hf_ds_path")
-
     num_examples = len(training_dataset)
     if args.sample_percent != 100:
         num_to_keep = int(num_examples * (args.sample_percent / 100))
@@ -58,7 +54,7 @@ def main(args):
             lambda example: len(example[args.key]) <= args.max_sentence_length,
             num_proc=NUM_PROC,
         )
-    training_dataset = filter_dataset(training_dataset,args.key)
+    training_dataset = filter_dataset(training_dataset, args.key)
     print(num_examples)
 
     # tokenizer arguments
@@ -120,8 +116,7 @@ def main(args):
         )
     else:
         whitespace_list = [
-            whitespace * (2**count)
-            for count in range(whitespace_count, 0, -1)
+            whitespace * (2**count) for count in range(whitespace_count, 0, -1)
         ]
 
     if args.single_whitespace:
@@ -241,7 +236,9 @@ def main(args):
     start = time()
     if isinstance(training_dataset, datasets.arrow_dataset.Dataset):
         tokenizer.train_from_iterator(
-            batch_iterator(training_dataset,key=args.key), trainer=trainer, length=num_examples
+            batch_iterator(training_dataset, key=args.key),
+            trainer=trainer,
+            length=num_examples,
         )
 
     end = time()
