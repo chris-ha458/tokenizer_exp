@@ -2,7 +2,7 @@
 
 #SBATCH --requeue
 #SBATCH --job-name="polyglot"
-#SBATCH --mem=320GB
+#SBATCH --mem=640GiB
 #SBATCH --exclusive
 #SBATCH --time=24:00:00
 #SBATCH --error=/fsx/polyglot-tokenizer/logs/slurm-%j.err
@@ -22,7 +22,7 @@ pip install setuptools_rust datasets jsonlines
 # download and install huggingface tokenizers
 git clone https://github.com/huggingface/tokenizers.git _tokenizers &&\
 cd _tokenizers/bindings/python &&\
-python _tokenizers/bindings/python/setup.py install && cd ../../..
+python3 setup.py install && cd ../../..
 
 # change this path
 # xargs python3 ./train_tokenizer.py < /home/karyo/corpus/scripts/configs/unigram_test.txt
