@@ -7,9 +7,15 @@ from time import time
 import datasets
 from tokenizers import Regex, Tokenizer, decoders, normalizers
 from tokenizers.models import BPE, Unigram
-from tokenizers.pre_tokenizers import (ByteLevel, Digits, Punctuation,
-                                       Sequence, Split, UnicodeScripts,
-                                       Whitespace)
+from tokenizers.pre_tokenizers import (
+    ByteLevel,
+    Digits,
+    Punctuation,
+    Sequence,
+    Split,
+    UnicodeScripts,
+    Whitespace,
+)
 from tokenizers.trainers import BpeTrainer, UnigramTrainer
 
 from utils import batch_iterator, filter_dataset, load_from_path
@@ -119,29 +125,29 @@ def parse_args():
         "--remove_longspace",
         type=bool,
         default=False,
-        choices=[True, False],
-        help="during tokenizer training preprocessing, remove long whitespaces(longer than 16)",
+        action=argparse.BooleanOptionalAction,
+        help="""during training preprocessing, remove whitespaces longer than 16""",
     )
     parser.add_argument(
         "--single_whitespace",
         type=bool,
         default=False,
-        choices=[True, False],
+        action=argparse.BooleanOptionalAction,
         help="Whether to include single whitespace in vocab",
     )
     parser.add_argument(
         "--add_prefix_space",
         type=bool,
-        default=True,
-        choices=[True, False],
+        default=False,
+        action=argparse.BooleanOptionalAction,
         help="add prefix space. True : 'Gword','word' ",
     )
     parser.add_argument(
         "--isolate_camelcase",
         type=bool,
-        default=False,
-        choices=[True, False],
-        help="during tokenizer training preprocessing, isolate camelcases",
+        default=True,
+        action=argparse.BooleanOptionalAction,
+        help="during tokenizer training preprocessing, isolate camelCases",
     )
     parser.add_argument(
         "--shuffle_seed",
@@ -197,7 +203,7 @@ def main(args):
             split="train",
         )
     else:
-        raise ValueError(f"Check --data_path or hf_ds_path")
+        raise ValueError("Check --data_path or hf_ds_path")
 
     num_examples = len(dataset)
     if sample_percent != 100:
@@ -316,12 +322,12 @@ def main(args):
         ),
         Digits(individual_digits=True),
     ]
-    if args.remove_longspace == True:
+    if args.remove_longspace:
         pre_tokenizer_list.append(
             Split(pattern=split_pattern, behavior="removed", invert=False)
         )
     # camel case logic
-    if args.isolate_camelcase == True:
+    if args.isolate_camelcase:
         camel_case_regex = r"(?<=[a-z])(?=[A-Z])"
         camel_case_pattern = Regex(camel_case_regex)
         pre_tokenizer_list.append(
@@ -408,12 +414,12 @@ def main(args):
                 break
 
     # remove preprocess only pretokenizers.
-    if args.remove_longspace == True:
+    if args.remove_longspace:
         for item in pre_tokenizer_list:
             if isinstance(item, Split):
                 pre_tokenizer_list.remove(item)
                 break
-    if args.isolate_camelcase == True:
+    if args.isolate_camelcase:
         for item in pre_tokenizer_list:
             if isinstance(item, Split):
                 pre_tokenizer_list.remove(item)

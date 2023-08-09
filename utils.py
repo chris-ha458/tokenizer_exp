@@ -1,6 +1,8 @@
-import jsonlines
+import glob
+import os
+
 import datasets
-import os, glob
+import jsonlines
 from tqdm import tqdm
 
 batch_size = 1024
