@@ -22,7 +22,7 @@ source ~/dev_envs/env_tokenizers/bin/activate
 # cd ../../..
 
 # change this path
-xargs python3 /home/karyo/corpus/scripts/train_tokenizer.py < /home/karyo/corpus/scripts/configs/polyglot_64k.txt
+xargs python3 ~/scripts/train_tokenizer.py < ~/scripts/configs/polyglot_64k.txt
 deactivate
 
 #rm -rf .cache __cache__ __*
