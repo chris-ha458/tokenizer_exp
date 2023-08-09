@@ -48,7 +48,7 @@ def parse_args():
     parser.add_argument(
         "--hf_ds_path",
         type=str,
-        default="hac541309/polyglot-ko-tokenizer-corpus",
+        default="hac541309/open-lid-dataset",
         required=False,
         help="takes huggingface data repo",
     )
@@ -64,12 +64,12 @@ def parse_args():
         type=str,
         default="NFC",
         choices=["NFKC", "NFC"],
-        help="unicode normalizer",
+        help="unicode normalizer NFKC is closer to spm. NFC is closer to most text",
     )
     parser.add_argument(
         "--buffer_tokens",
         type=int,
-        default=100,
+        default=64,
         help="number of tokens to pad BEFORE tokenizer initialization",
     )
     parser.add_argument(
@@ -77,7 +77,7 @@ def parse_args():
         type=bool,
         action=argparse.BooleanOptionalAction,
         default=False,
-        help="Bytelevel() preprocessor vs (byte_fallback)",
+        help="Huggingface style Bytelevel() vs spm style (byte_fallback)",
     )
     parser.add_argument(
         "--cache_capacity",
