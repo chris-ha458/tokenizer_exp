@@ -21,12 +21,22 @@ pip install setuptools_rust datasets jsonlines
 
 # download and install huggingface tokenizers
 git clone https://github.com/huggingface/tokenizers.git _tokenizers &&\
-cd _tokenizers/bindings/python && python setup.py install
-cd ../../..
+cd _tokenizers/bindings/python &&\
+python _tokenizers/bindings/python/setup.py install && cd ../../..
 
 # change this path
 # xargs python3 ./train_tokenizer.py < /home/karyo/corpus/scripts/configs/unigram_test.txt
 
+python3 train_tokenizer.py \
+--model "bpe" \
+--hf_ds_path "VMware/open-instruct" \
+--key "response"\
+--model_prefix "test" \
+--whitespace_reservation 4 \
+--exp_whitespace_reservation \
+--sample_percent 1
+
+
 deactivate
 
-rm -rf _temp _tokenizers ~/corpus/__temp__
+rm -rf _temp _tokenizers __temp__

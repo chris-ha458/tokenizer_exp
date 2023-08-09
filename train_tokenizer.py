@@ -31,6 +31,7 @@ CACHE_DIR = "./__temp__/tokenizer_corpus"
 
 
 def main(args):
+    print(args.key)
 
     if args.data_path:
         training_dataset = load_from_path(args.data_path)
@@ -54,10 +55,10 @@ def main(args):
         training_dataset.shuffle(args.shuffle_seed)
     if args.max_sentence_length > 0:
         training_dataset = training_dataset.filter(
-            lambda example: len(example["text"]) <= args.max_sentence_length,
+            lambda example: len(example[args.key]) <= args.max_sentence_length,
             num_proc=NUM_PROC,
         )
-    training_dataset = filter_dataset(training_dataset)
+    training_dataset = filter_dataset(training_dataset,args.key)
     print(num_examples)
 
     # tokenizer arguments
@@ -240,7 +241,7 @@ def main(args):
     start = time()
     if isinstance(training_dataset, datasets.arrow_dataset.Dataset):
         tokenizer.train_from_iterator(
-            batch_iterator(training_dataset), trainer=trainer, length=num_examples
+            batch_iterator(training_dataset,key=args.key), trainer=trainer, length=num_examples
         )
 
     end = time()

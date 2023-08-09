@@ -22,7 +22,17 @@ source ~/dev_envs/env_tokenizers/bin/activate
 # cd ../../..
 
 # change this path
-xargs python3 ~/scripts/train_tokenizer.py < ~/scripts/configs/polyglot_64k.txt
+# xargs python3 ~/scripts/train_tokenizer.py < ~/scripts/configs/polyglot_64k.txt
+
+python3 train_tokenizer.py \
+--model "bpe" \
+--hf_ds_path "hac541309/the_stack_smol_all" \
+--model_prefix "test" \
+--whitespace_reservation 4 \
+--exp_whitespace_reservation \
+--sample_percent 1
+
+
 deactivate
 
 #rm -rf .cache __cache__ __*

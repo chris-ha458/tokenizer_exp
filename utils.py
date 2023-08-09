@@ -98,8 +98,8 @@ def convert_json_to_dataset(file_path, save_path, key="text"):
     dataset.save_to_disk(save_path)
 
 
-def filter_dataset(dataset: datasets.Dataset) -> datasets.Dataset:
-    return dataset.filter(lambda example: example["text"].strip(), num_proc=NUM_PROC)
+def filter_dataset(dataset: datasets.Dataset,key="text") -> datasets.Dataset:
+    return dataset.filter(lambda example: example[key].strip(), num_proc=NUM_PROC)
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -129,6 +129,12 @@ def parse_args():
         help="takes huggingface data repo",
     )
     parser.add_argument("--save_path", type=str, default="tokenizer")
+    parser.add_argument(
+        "--key",
+        type=str,
+        default="text",
+        help="""key column to extract from dataset """,
+    )
     parser.add_argument(
         "--model_prefix",
         type=str,
@@ -193,9 +199,9 @@ def parse_args():
         default="yes",
         choices=["yes", "inference", "no"],
         help="choose whitespace preservation. \n \
-            yes preserves during training and inference\n \
-            inference removes during training but resumes at inference\n \
-            no removes completely. this makes tokenizer non invertible(loses original)",
+            yes: preserves during training and inference\n \
+            inference: removes during training but resumes at inference\n \
+            no: removes completely. this makes tokenizer non invertible(loses original)",
     )
     parser.add_argument(
         "--remove_longspace",
