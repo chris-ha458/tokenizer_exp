@@ -27,10 +27,8 @@ python3 setup.py install && cd ../../..
 rm -rf _tokenizers
 
 # change this path
-# xargs python3 ./train_tokenizer.py < /home/karyo/corpus/scripts/configs/unigram_test.txt
-
 python3 train_tokenizer_standalone.py
 
 deactivate
 
-rm -rf _temp _tokenizers __temp__
+rm -rf _temp _tokenizers __*
