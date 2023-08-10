@@ -2,9 +2,9 @@
 
 #SBATCH --requeue
 #SBATCH --job-name="polyglot"
-#SBATCH --mem=640GiB
+#SBATCH --mem=960GB
 #SBATCH --exclusive
-#SBATCH --time=24:00:00
+#SBATCH --time=96:00:00
 #SBATCH --error=/admin/home-chris458/tokenizer_exp/logs/slurm-%j.err
 #SBATCH --output=/admin/home-chris458/tokenizer_exp/logs/slurm-%j.out
 #SBATCH --comment=eleuther
@@ -16,26 +16,20 @@ source "$HOME/.cargo/env"
 
 #setup env
 python3 -m venv _temp && source _temp/bin/activate
-pip install setuptools_rust datasets jsonlines
+pip3 install setuptools_rust datasets jsonlines
 
 
 # download and install huggingface tokenizers
+rm -rf _tokenizers
 git clone https://github.com/huggingface/tokenizers.git _tokenizers &&\
 cd _tokenizers/bindings/python &&\
 python3 setup.py install && cd ../../..
+rm -rf _tokenizers
 
 # change this path
 # xargs python3 ./train_tokenizer.py < /home/karyo/corpus/scripts/configs/unigram_test.txt
 
-python3 train_tokenizer.py \
---model "bpe" \
---hf_ds_path "hac541309/open-lid-dataset" \
---key "text" \
---model_prefix "openLID" \
---whitespace_reservation 4 \
---exp_whitespace_reservation \
---sample_percent 100
-
+python3 train_tokenizer_standalone.py
 
 deactivate
 
